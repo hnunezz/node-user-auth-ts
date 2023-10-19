@@ -1,4 +1,9 @@
 /* 
+    - /user
+        - CRUD 
+    
+    - /status
+        - Server Status
 
     npm init
     touch.exe index.js
@@ -10,5 +15,6 @@
     npm install --save-dev @types/express
     npm install --save-dev ts-node-dev
     npm install --save http-status-codes
-
+    npm install --save pg
+    npm install --save-dev @types/pg
 */

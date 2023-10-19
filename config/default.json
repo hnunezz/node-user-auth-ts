@@ -1,0 +1,8 @@
+{
+  "database": {
+    "uri": "postgres://ppzbpdta:rIYia3Xdn-grI4TvUZEkBdpnZt6qUcO2@isabelle.db.elephantsql.com/ppzbpdta"
+  },
+  "authentication": {
+    "cryptKey": "my_salt"
+  }
+}
