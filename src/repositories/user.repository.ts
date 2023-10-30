@@ -1,81 +1,100 @@
-import db from "../db";
-import DatabaseError from "../models/errors/database.error.model";
-import User from "../models/user.model";
+import config from 'config';
+import db from '../database';
+import { User } from '../models/user.model';
+import { DatabaseError } from './../errors/database.error';
+
+const authenticationCryptKey = config.get<string>('authentication.cryptKey');
 
 class UserRepository {
 
-    async findAllUsers(): Promise<User[]> {
-        const query = `
-            SELECT uuid, username 
-            FROM application_user
-        `;
+    async create(user: User): Promise<string> {
+        try {
+            const script = `
+                INSERT INTO application_user (
+                    username, 
+                    password
+                ) 
+                VALUES ($1, crypt($2, '${authenticationCryptKey}')) 
+                RETURNING uuid
+            `;
 
-        const { rows } = await db.query<User>(query);
+            const values = [user.username, user.password];
+            const queryResult = await db.query<{ uuid: string }>(script, values);
 
-        return rows || [];
+            const [row] = queryResult.rows;
+            return row.uuid;
+        } catch (error) {
+            throw new DatabaseError({ log: 'Erro ao inserir usuário', data: error });
+        }
     }
 
-    async findById(uuid: string): Promise<User> {
+    async update(user: User): Promise<void> {
         try {
-            const query = `
-                SELECT uuid, username 
-                FROM application_user
+            const script = `
+                UPDATE application_user
+                SET
+                    username = $2,
+                    password = crypt($3, '${authenticationCryptKey}')
+                WHERE uuid = $1            
+            `;
+
+            const values = [user.uuid, user.username, user.password];
+            await db.query(script, values);
+        } catch (error) {
+            throw new DatabaseError({ log: 'Erro ao atualizar usuário', data: error });
+        }
+    }
+
+    async remove(uuid: string): Promise<void> {
+        try {
+            const script = `
+                DELETE 
+                FROM application_user 
                 WHERE uuid = $1
             `;
 
             const values = [uuid];
-            const { rows } = await db.query<User>(query, values);
-            const [user] = rows; //* user = rows[0] *//
-
-            return user;
+            await db.query(script, values);
         } catch (error) {
-            throw new DatabaseError('Erro na consulta por ID', error as Error);
+            throw new DatabaseError({ log: 'Erro ao deletar usuário', data: error });
         }
     }
 
-    async create(user: User): Promise<string> {
-        const query = `
-            INSERT INTO application_user (
-                username, 
-                password
-            )
-            VALUES (
-                $1, 
-                crypt($2, $3)
-            ) 
-            RETURNING uuid
-        `;
-
-        const values = [user.username, user.password, 'my_salt'];
-        const { rows } = await db.query<{ uuid: string }>(query, values);
-        const [newUser] = rows;
-
-        return newUser.uuid;
+    async findByUuid(uuid: string): Promise<User | null> {
+        try {
+            const query = `
+                SELECT 
+                    uuid, 
+                    username
+                FROM application_user
+                WHERE uuid = $1
+            `;
+            const queryResult = await db.query<User>(query, [uuid]);
+            const [row] = queryResult.rows;
+            return !row ? null : row;
+        } catch (error) {
+            throw new DatabaseError({ log: 'Erro ao buscar usuário por uuid', data: error });
+        }
     }
 
-    async update(user: User): Promise<void> {
-        const query = `
-            UPDATE application_user 
-            SET
-                username = $1, 
-                password = crypt($2, $3)
-            WHERE uuid = $4
-        `;
-
-        const values = [user.username, user.password, 'my_salt', user.uuid];
-        await db.query(query, values);
+    async findByUsernameAndPassword(username: string, password: string): Promise<User | null> {
+        try {
+            const query = `
+                SELECT 
+                    uuid, 
+                    username
+                FROM application_user
+                WHERE username = $1
+                AND password = crypt($2, '${authenticationCryptKey}')
+            `;
+            const queryResult = await db.query(query, [username, password]);
+            const [row] = queryResult.rows;
+            return !row ? null : row;
+        } catch (error) {
+            throw new DatabaseError({ log: 'Erro ao buscar usuário por username e password', data: error });
+        }
     }
 
-    async remove(uuid: string): Promise<void> {
-        const query = `
-            DELETE 
-            FROM application_user
-            WHERE uuid = $1
-        `;
-
-        const values = [uuid];
-        await db.query(query, values);
-    }
 }
 
 export default new UserRepository();
