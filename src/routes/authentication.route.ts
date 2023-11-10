@@ -1,30 +1,35 @@
 
 import { NextFunction, Request, Response, Router } from "express";
 import { StatusCodes } from 'http-status-codes';
-import JWT from 'jsonwebtoken';
+import JWT, { SignOptions } from 'jsonwebtoken';
 import basicAuthMiddleware from "../middlewares/basic-authentication.middleware";
+import jwtAuthenticationMiddleware from "../middlewares/jwt-authentication.middleware";
+import { ForbiddenError } from "../errors/forbidden.error";
 
-const route = Router();
+const authorizationRoute = Router();
 
-// “iss” O domínio da aplicação geradora do token
-// “sub” É o assunto do token, mas é muito utilizado para guarda o ID do usuário
-// “aud” Define quem pode usar o token
-// “exp” Data para expiração do token
-// “nbf” Define uma data para qual o token não pode ser aceito antes dela
-// “iat” Data de criação do token
-// “jti” O id do token
+authorizationRoute.post('/token/validate', jwtAuthenticationMiddleware, (req: Request, res: Response, next: NextFunction) => {
+    res.sendStatus(StatusCodes.OK);
+});
 
-route.post('/token', basicAuthMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+authorizationRoute.post('/token', basicAuthMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const token = JWT.sign({}, 'teste', {
-            audience: 'consumer-uuid or api key',
-            subject: req.user?.uuid
-        });
-        
+        const user = req.user;
+
+        if (!user) {
+            console.log('teste');
+        }
+
+        const jwtPayload = { username: user?.username };
+        const secretKey = 'my_secret_key';
+        const jwtOptions: SignOptions = { subject: user?.uuid, expiresIn: 600000 };
+
+        const token = JWT.sign(jwtPayload, secretKey, jwtOptions);
+
         return res.status(StatusCodes.OK).json({ token });
     } catch (error) {
         next(error);
     }
 });
 
-export default route;
+export default authorizationRoute;

@@ -23,7 +23,7 @@ const jwtAuthenticationMiddleware = async (req: Request, res: Response, next: Ne
         }
 
         try {
-            const tokenPayload = JWT.verify(jwtToken, 'teste');
+            const tokenPayload = JWT.verify(jwtToken, 'my_secret_key');
             if (typeof tokenPayload !== 'object' || !tokenPayload.sub) {
                 throw new ForbiddenError({ log: 'Invalid token' });
             }

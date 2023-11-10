@@ -5,37 +5,55 @@ import jwtAuthenticationMiddleware from './middlewares/jwt-authentication.middle
 import authenticationRoute from './routes/authentication.route';
 import userRoute from './routes/user.route';
 
+// const app = express();
+
+// //* App Config and Middlewares *//
+// const host = 'http://localhost';
+// const port = 3000;
+
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// //* Routes Config *//
+// app.use('/authentication', authenticationRoute);
+// app.use('/users', jwtAuthenticationMiddleware, userRoute);
+
+
+// //* Handler Config *//
+// app.use(errorHanddlerMiddleware);
+
+// //* Server Init *//
+// app.use('/', (req: Request, res: Response) => {
+//     res.json({ message: 'ok' });
+// });
+
+// const server = app.listen(3000, () => {
+//     console.log(`Server running in ${host}:${port}`);
+// });
+
+// process.on('SIGTERM', () => {
+//     db.end(() => {
+//         console.log('database connection closed!')
+//     });
+//     server.close(() => {
+//         console.log('server on 3000 closed!');
+//     });
+// })
+
 const app = express();
 
-//* App Config and Middlewares *//
-const host = 'http://localhost';
-const port = 3000;
-
+// Configurações da aplicação
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//* Routes Config *//
-app.use('/authentication', authenticationRoute);
-app.use('/users', jwtAuthenticationMiddleware, userRoute);
+// Configurações de rotas
+app.use(userRoute);
+app.use(authenticationRoute);
 
-
-//* Handler Config *//
+// Configurações do Handler de Erros
 app.use(errorHanddlerMiddleware);
 
-//* Server Init *//
-app.use('/', (req: Request, res: Response) => {
-    res.json({ message: 'ok' });
-});
-
-const server = app.listen(3000, () => {
-    console.log(`Server running in ${host}:${port}`);
-});
-
-process.on('SIGTERM', () => {
-    db.end(() => {
-        console.log('database connection closed!')
-    });
-    server.close(() => {
-        console.log('server on 3000 closed!');
-    });
-})
+// Inicialização do servidor
+app.listen(3000, () =>
+  console.log(`App rodando na porta 300`)
+);

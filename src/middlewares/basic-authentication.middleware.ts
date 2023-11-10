@@ -5,6 +5,7 @@ import userRepository from '../repositories/user.repository';
 const basicAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const authorizationHeader = req.headers.authorization;
+                // const authorizationHeader = req.headers['authorization'];
     
         if (!authorizationHeader) {
             throw new ForbiddenError({ log: 'Credenciais not found' });
